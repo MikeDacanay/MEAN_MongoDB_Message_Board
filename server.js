@@ -20,7 +20,6 @@ mongoose.model('Post', PostSchema);
 mongoose.model('Comment', CommentSchema);
 var Post = mongoose.model('Post');
 var Comment = mongoose.model('Comment');
-
 mongoose.connect('mongodb://localhost/Message_board');
 mongoose.Promise = global.Promise;
 
@@ -30,8 +29,15 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 app.get('/', function(req,res){
-	res.render('index');
-})
+	Post.find({})
+		.populate('comments')
+ 		.exec(function(err, post) {
+ 			console.log(post);
+      	res.render('index', {post: post});
+    	});
+});
+
+
 
 app.post('/addpost', function(req,res){
 	var newPost = new Post({name:req.body.name,message:req.body.message})
@@ -44,3 +50,20 @@ app.post('/addpost', function(req,res){
 	    }
 	})
 })
+
+app.post('/addcomment/:id', function (req, res){
+    Post.findOne({_id: req.params.id}, function(err, post){
+        var comment = new Comment({name: req.body.name,text: req.body.text});
+        comment._post = post._id;
+        comment.save(function(err){
+            post.comments.push(comment);
+            post.save(function(err){
+                if(err) {
+                    console.log('Error');
+                } else {
+                    res.redirect('/');
+                }
+            });
+        });
+    });
+});
