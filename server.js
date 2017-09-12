@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var PostSchema = new mongoose.Schema({
 	name: {type: String, required: true, minlength: 4},
-	text: {type: String, required: true }, 
+	message: {type: String, required: true }, 
 	comments: [{type: Schema.Types.ObjectId, ref: 'Comment'}]
 }, 
 {timestamps: true}
@@ -16,7 +16,10 @@ var CommentSchema = new mongoose.Schema({
 	text: { type: String, required: true },
 }, 
 {timestamps: true });
-
+mongoose.model('Post', PostSchema);
+mongoose.model('Comment', CommentSchema);
+var Post = mongoose.model('Post');
+var Comment = mongoose.model('Comment');
 
 mongoose.connect('mongodb://localhost/Message_board');
 mongoose.Promise = global.Promise;
@@ -28,4 +31,16 @@ app.set('view engine', 'ejs');
 
 app.get('/', function(req,res){
 	res.render('index');
+})
+
+app.post('/addpost', function(req,res){
+	var newPost = new Post({name:req.body.name,message:req.body.message})
+	newPost.save(function(err){
+	   	if(err) {
+	    	console.log('something went wrong');
+	    } else {
+	    	console.log('successfully added a user!');
+	    	res.redirect('/');
+	    }
+	})
 })
